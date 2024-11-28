@@ -1,6 +1,6 @@
 {
   "name": "avr-tts-google-cloud-tts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Giuseppe Careri",
   "description": "",
   "main": "index.js",
@@ -9,6 +9,10 @@
     "start:dev": "nodemon --inspect ./index.js",
     "dc:build": "docker build --platform=linux/amd64 -t agentvoiceresponse/avr-tts-google-cloud-tts:latest -t agentvoiceresponse/avr-tts-google-cloud-tts:${npm_package_version} .",
     "dc:push": "docker push agentvoiceresponse/avr-tts-google-cloud-tts:latest && docker push agentvoiceresponse/avr-tts-google-cloud-tts:${npm_package_version}"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentvoiceresponse/avr-tts-google-cloud-tts.git"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^5.4.0",
