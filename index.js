@@ -6,8 +6,6 @@
  */
 const express = require('express');
 const { TextToSpeechClient } = require('@google-cloud/text-to-speech');
-const fs = require('fs');
-const path = require('path');
 
 require('dotenv').config();
 
@@ -33,18 +31,6 @@ console.log("Google Text To Speech Configuration", requestConfig)
 
 app.use(express.json());
 
-const audioCacheDir = path.join(__dirname, 'audio-cache');
-
-// Ensure the audio cache directory exists
-if (!fs.existsSync(audioCacheDir)) {
-  fs.mkdirSync(audioCacheDir);
-}
-
-const getAudioFilePath = (text) => {
-  const sanitizedText = text.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  return path.join(audioCacheDir, `${sanitizedText}.wav`);
-};
-
 /**
  * Handle incoming HTTP POST request with JSON body containing a text string,
  * and streams the text-to-speech audio response back to the client.
@@ -59,36 +45,29 @@ const handleTextToSpeech = async (req, res) => {
     return res.status(400).json({ message: 'Text is required' });
   }
 
-  const audioFilePath = getAudioFilePath(text);
+  requestConfig.input = { text };
 
-  if (fs.existsSync(audioFilePath)) {
-    // If the audio file exists, stream it to the client
-    console.log('Streaming cached audio file');
-    res.setHeader('Content-Type', 'audio/wav');
-    const readStream = fs.createReadStream(audioFilePath);
-    readStream.pipe(res);
-  } else {
-    // If the audio file does not exist, generate it using Google TTS
-    console.log('Generating audio file');
-    requestConfig.input = { text };
+  console.log(requestConfig);
 
-    try {
-      const [response] = await textToSpeechClient.synthesizeSpeech(requestConfig);
-      const audioContent = response.audioContent;
+  res.setHeader('Content-Type', 'audio/l16');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-      // Save the audio content to a file
-      fs.writeFileSync(audioFilePath, audioContent, 'binary');
-
-      // Stream the audio content to the client
-      res.setHeader('Content-Type', 'audio/wav');
-      res.write(audioContent, 'binary');
-      res.end();
-    } catch (error) {
-      console.error('Error calling Google TTS API:', error.message);
-      res.status(500).json({ message: 'Error communicating with Google TTS' });
+  try {
+    const [response] = await textToSpeechClient.synthesizeSpeech(requestConfig);
+    const audioContent = response.audioContent;
+    const chunkSize = 320;
+    for (let i = 0; i < audioContent.length; i += chunkSize) {
+      const chunk = audioContent.slice(i, i + chunkSize);
+      res.write(chunk);
     }
+
+    res.end();
+  } catch (error) {
+    console.error('Error calling Google TTS API:', error.message);
+    res.status(500).json({ message: 'Error communicating with Google TTS' });
   }
-};
+}
 
 app.post('/text-to-speech-stream', handleTextToSpeech);
 
