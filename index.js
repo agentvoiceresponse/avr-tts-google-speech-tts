@@ -56,12 +56,7 @@ const handleTextToSpeech = async (req, res) => {
   try {
     const [response] = await textToSpeechClient.synthesizeSpeech(requestConfig);
     const audioContent = response.audioContent;
-    const chunkSize = 320;
-    for (let i = 0; i < audioContent.length; i += chunkSize) {
-      const chunk = audioContent.slice(i, i + chunkSize);
-      res.write(chunk);
-    }
-
+    res.write(audioContent);
     res.end();
   } catch (error) {
     console.error('Error calling Google TTS API:', error.message);

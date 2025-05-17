@@ -15,8 +15,8 @@ To run this project, you will need:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/agentvoiceresponse/agent-voice-response-tts.git
-cd agent-voice-response-tts
+git clone https://github.com/agentvoiceresponse/avr-tts-google-cloud-tts
+cd avr-tts-google-cloud-tts
 ```
 
 ### 2. Install Dependencies
